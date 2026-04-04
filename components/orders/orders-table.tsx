@@ -1,0 +1,74 @@
+'use client';
+
+// Fixed: campaigns prop properly destructured
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { OrderRow } from './order-row';
+import { Order } from '@/types/order';
+import { Campaign } from '@/types/campaign';
+import { BlacklistEntry } from '@/types/blacklist';
+
+interface OrdersTableProps {
+  orders: Order[];
+  onUpdateOrder: (order: Order) => void;
+  campaigns: Campaign[];
+  blacklist?: BlacklistEntry[];
+  isPhoneBlacklisted?: (phone: string) => boolean;
+  onAddToBlacklist?: (phone: string, reason: string) => void;
+}
+
+const statusConfig = {
+  pending: { label: 'Pending', className: 'bg-yellow-900 text-yellow-200 hover:bg-yellow-800' },
+  delivered: { label: 'Delivered', className: 'bg-green-900 text-green-200 hover:bg-green-800' },
+  returned: { label: 'Returned', className: 'bg-red-900 text-red-200 hover:bg-red-800' },
+};
+
+export function OrdersTable({ 
+  orders, 
+  onUpdateOrder, 
+  campaigns,
+  blacklist = [],
+  isPhoneBlacklisted = () => false,
+  onAddToBlacklist = () => {},
+}: OrdersTableProps) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow className="border-slate-800 hover:bg-slate-800/50">
+          <TableHead className="text-slate-300 font-semibold">Customer Name</TableHead>
+          <TableHead className="text-slate-300 font-semibold">Phone</TableHead>
+          <TableHead className="text-slate-300 font-semibold">City</TableHead>
+          <TableHead className="text-slate-300 font-semibold">Product</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Selling Price (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Product Cost (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Packaging (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Shipping Fee (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold">Ad Campaign (Source)</TableHead>
+          <TableHead className="text-slate-300 font-semibold">Status</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Net Profit (DH)</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {orders.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={11} className="text-center py-8 text-slate-400">
+              No orders yet. Add your first order to get started.
+            </TableCell>
+          </TableRow>
+        ) : (
+          orders.map((order) => (
+            <OrderRow
+              key={order.id}
+              order={order}
+              onUpdate={onUpdateOrder}
+              statusConfig={statusConfig}
+              campaigns={campaigns}
+              isBlacklisted={isPhoneBlacklisted(order.phone)}
+              onAddToBlacklist={onAddToBlacklist}
+            />
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+}

@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id              String    @id @default(cuid())
+  customerName    String
+  phone           String
+  city            String
+  product         String
+  sellingPrice    Float
+  shippingFee     Float
+  status          String    @default("pending") // pending, delivered, returned
+  campaignSource  String    @default("Organic")
+  campaign        Campaign? @relation(fields: [campaignSource], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([campaignSource])
+}
+
+model Campaign {
+  id              String    @id @default(cuid())
+  name            String
+  isActive        Boolean   @default(true)
+  plannedBudget   Float
+  actualSpent     Float
+  ordersGenerated Int       @default(0)
+  orders          Order[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model City {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  shippingFee Float
+  returnFee   Float
+  createdAt   DateTime  @default(now())
+}
