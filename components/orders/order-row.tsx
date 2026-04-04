@@ -56,10 +56,13 @@ export function OrderRow({
     }
   };
 
-  // Calculate net profit for this order (only if delivered)
-  const netProfit = order.status === 'delivered' 
-    ? order.sellingPrice - order.productCost - order.packagingCost - order.shippingFee
-    : 0;
+  // Calculate net profit for this order with new e-commerce logic
+  const netProfit = 
+    order.status === 'delivered' 
+      ? order.sellingPrice - order.productCost - order.packagingCost - order.shippingFee
+      : order.status === 'returned'
+      ? 0 - order.returnFee - order.packagingCost
+      : 0;
 
   return (
     <>
@@ -135,6 +138,15 @@ export function OrderRow({
             placeholder="Auto-filled"
           />
         </TableCell>
+        <TableCell className="text-right text-slate-200">
+          <Input
+            type="number"
+            value={order.returnFee}
+            onChange={(e) => handleFieldChange('returnFee', parseFloat(e.target.value) || 15)}
+            className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right"
+            placeholder="15"
+          />
+        </TableCell>
         <TableCell className="text-slate-200">
           <CampaignSelect
             value={order.campaignSource}
@@ -156,7 +168,7 @@ export function OrderRow({
       {/* Blacklist Dialog Row */}
       {showBlacklistDialog && (
         <TableRow className="bg-red-950/20 border-slate-700">
-          <TableCell colSpan={11} className="py-4">
+          <TableCell colSpan={12} className="py-4">
             <div className="flex items-center gap-3 bg-red-950/30 p-4 rounded-lg border border-red-700/30">
               <div className="flex-1">
                 <p className="text-sm text-red-300 mb-2">Add to blacklist: {order.phone}</p>
@@ -191,19 +203,21 @@ export function OrderRow({
         </TableRow>
       )}
       
-      {/* Add to Blacklist Button Row */}
+      {/* Action Menu Row */}
       {!isBlacklisted && !showBlacklistDialog && (
         <TableRow className="bg-slate-900/50 border-slate-800">
-          <TableCell colSpan={11} className="py-2">
-            <Button
-              onClick={() => setShowBlacklistDialog(true)}
-              variant="outline"
-              size="sm"
-              className="border-red-700/30 text-red-400 hover:bg-red-950/30 text-xs gap-1 ml-auto"
-            >
-              <Plus size={14} />
-              Add to Blacklist
-            </Button>
+          <TableCell colSpan={12} className="py-2">
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setShowBlacklistDialog(true)}
+                variant="outline"
+                size="sm"
+                className="border-red-700/30 text-red-400 hover:bg-red-950/30 text-xs gap-1"
+              >
+                <Plus size={14} />
+                Add to Blacklist
+              </Button>
+            </div>
           </TableCell>
         </TableRow>
       )}

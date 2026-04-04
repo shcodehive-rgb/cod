@@ -10,6 +10,7 @@ export interface Order {
   productCost: number; // Wholesale price
   packagingCost: number; // Box/tape cost (default 5 DH)
   shippingFee: number; // Delivery company cost
+  returnFee: number; // Return delivery cost (default 15 DH for Ozone)
   status: OrderStatus;
   campaignSource: string; // 'Organic' or campaign ID
 }

@@ -12,6 +12,7 @@ const initialOrders: Order[] = [
     productCost: 150,
     packagingCost: 5,
     shippingFee: 20,
+    returnFee: 15,
     status: 'pending',
     campaignSource: '1',
   },
@@ -25,6 +26,7 @@ const initialOrders: Order[] = [
     productCost: 25,
     packagingCost: 5,
     shippingFee: 35,
+    returnFee: 15,
     status: 'delivered',
     campaignSource: '2',
   },
@@ -44,6 +46,7 @@ export function useOrders() {
       productCost: 0,
       packagingCost: 5,
       shippingFee: 0,
+      returnFee: 15,
       status: 'pending',
       campaignSource: 'Organic',
     };

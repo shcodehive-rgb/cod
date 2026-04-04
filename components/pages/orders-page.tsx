@@ -53,6 +53,7 @@ export function OrdersPage({
       productCost: 0,
       packagingCost: 5,
       shippingFee: 0,
+      returnFee: 15,
       status: 'pending',
       campaignSource: 'Organic',
     };
