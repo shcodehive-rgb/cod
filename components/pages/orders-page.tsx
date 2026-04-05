@@ -37,9 +37,9 @@ export function OrdersPage({
 
   const filteredOrders = orders.filter(
     (order) =>
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.phone.includes(searchQuery) ||
-      order.city.toLowerCase().includes(searchQuery.toLowerCase())
+      (order.customerName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+      (order.phone || '').includes(searchQuery) ||
+      (order.city?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
   const handleAddOrder = () => {
