@@ -1,41 +1,39 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-
-// 🚀 هانا رجعت ليك الداتا ديالك من التصاور اللي صيفطتي ليا!
-const ordersDb: any[] = [
-  { id: '1', customerName: 'reda', phone: '664609889', city: 'Douar Boumaiz', product: 'Ceinture de cheville', sellingPrice: 149, productCost: 50, packagingCost: 5, shippingFee: 45, campaignSource: 'bismiallh tawkalto 3la allh', status: 'Delivered', createdAt: new Date() },
-  { id: '2', customerName: 'Talhrechet mohammed', phone: '675867222', city: 'Skhirat', product: 'Ceinture de cheville', sellingPrice: 149, productCost: 50, packagingCost: 5, shippingFee: 35, campaignSource: 'حملة إعلانية جديدة بهدف المبيعات', status: 'Delivered', createdAt: new Date() },
-  { id: '3', customerName: 'mousa', phone: '772964113', city: 'Moulay Bousselham', product: 'Ceinture de cheville', sellingPrice: 149, productCost: 50, packagingCost: 5, shippingFee: 45, campaignSource: 'حملة إعلانية جديدة بهدف المبيعات', status: 'Delivered', createdAt: new Date() },
-  { id: '4', customerName: 'Hamza El hilali', phone: '628087703', city: 'Agadir', product: 'Ceinture de cheville', sellingPrice: 149, productCost: 50, packagingCost: 5, shippingFee: 35, campaignSource: 'حملة إعلانية جديدة بهدف المبيعات', status: 'Delivered', createdAt: new Date() }
-];
-
-const campaignsDb: any[] = [
-  { id: 'c1', name: 'AD de Prospects', isActive: false, status: 'Stopped', plannedBudget: 50, actualSpent: 41.6, createdAt: new Date() },
-  { id: 'c2', name: 'test 2', isActive: false, status: 'Stopped', plannedBudget: 50, actualSpent: 32.6, createdAt: new Date() },
-  { id: 'c3', name: 'bismiallh tawkalto 3la allh', isActive: false, status: 'Stopped', plannedBudget: 70, actualSpent: 82.6, createdAt: new Date() },
-  { id: 'c4', name: 'Super Adsorption', isActive: false, status: 'Stopped', plannedBudget: 50, actualSpent: 9.6, createdAt: new Date() },
-  { id: 'c5', name: 'حملة إعلانية جديدة بهدف المبيعات', isActive: false, status: 'Stopped', plannedBudget: 100, actualSpent: 173.1, createdAt: new Date() },
-  { id: 'c6', name: '50', isActive: false, status: 'Stopped', plannedBudget: 50, actualSpent: 130, createdAt: new Date() }
-];
+import { supabase } from '@/lib/supabase';
+import { Order } from '@/types/order';
+import { Campaign } from '@/types/campaign';
 
 // ==================== ORDER ACTIONS ====================
 
-export async function createOrder(data: any) {
+export async function createOrder(data: Partial<Order>) {
   try {
-    const newOrder = { id: `order-${Date.now()}`, ...data, createdAt: new Date() };
-    ordersDb.push(newOrder);
+    const { data: order, error } = await supabase
+      .from('orders')
+      .insert([{
+        ...data,
+        created_at: new Date().toISOString()
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
     revalidatePath('/');
-    return { success: true, data: newOrder };
+    return { success: true, data: order };
   } catch (error) {
     return { success: false, error: String(error) };
   }
 }
 
-export async function updateOrder(id: string, data: any) {
+export async function updateOrder(id: string, data: Partial<Order>) {
   try {
-    const index = ordersDb.findIndex(o => o.id === id);
-    if (index !== -1) ordersDb[index] = { ...ordersDb[index], ...data };
+    const { error } = await supabase
+      .from('orders')
+      .update(data)
+      .eq('id', id);
+    
+    if (error) throw error;
     revalidatePath('/');
     return { success: true };
   } catch (error) {
@@ -45,8 +43,12 @@ export async function updateOrder(id: string, data: any) {
 
 export async function deleteOrder(id: string) {
   try {
-    const index = ordersDb.findIndex(o => o.id === id);
-    if (index !== -1) ordersDb.splice(index, 1);
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
     revalidatePath('/');
     return { success: true };
   } catch (error) {
@@ -54,27 +56,51 @@ export async function deleteOrder(id: string) {
   }
 }
 
-export async function fetchOrders() {
-  return ordersDb;
+export async function fetchOrders(): Promise<Order[]> {
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return [];
+  }
 }
 
 // ==================== CAMPAIGN ACTIONS ====================
 
-export async function createCampaign(data: any) {
+export async function createCampaign(data: Partial<Campaign>) {
   try {
-    const newCampaign = { id: `campaign-${Date.now()}`, ...data, ordersGenerated: 0, createdAt: new Date() };
-    campaignsDb.push(newCampaign);
+    const { data: campaign, error } = await supabase
+      .from('campaigns')
+      .insert([{
+        ...data,
+        orders_generated: 0,
+        created_at: new Date().toISOString()
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
     revalidatePath('/');
-    return { success: true, data: newCampaign };
+    return { success: true, data: campaign };
   } catch (error) {
     return { success: false, error: String(error) };
   }
 }
 
-export async function updateCampaign(id: string, data: any) {
+export async function updateCampaign(id: string, data: Partial<Campaign>) {
   try {
-    const index = campaignsDb.findIndex(c => c.id === id);
-    if (index !== -1) campaignsDb[index] = { ...campaignsDb[index], ...data };
+    const { error } = await supabase
+      .from('campaigns')
+      .update(data)
+      .eq('id', id);
+    
+    if (error) throw error;
     revalidatePath('/');
     return { success: true };
   } catch (error) {
@@ -84,8 +110,12 @@ export async function updateCampaign(id: string, data: any) {
 
 export async function updateCampaignSpend(campaignId: string, newSpend: number) {
   try {
-    const index = campaignsDb.findIndex(c => c.id === campaignId);
-    if (index !== -1) campaignsDb[index].actualSpent = newSpend;
+    const { error } = await supabase
+      .from('campaigns')
+      .update({ actual_spent: newSpend })
+      .eq('id', campaignId);
+    
+    if (error) throw error;
     revalidatePath('/');
     return { success: true };
   } catch (error) {
@@ -95,8 +125,12 @@ export async function updateCampaignSpend(campaignId: string, newSpend: number) 
 
 export async function deleteCampaign(id: string) {
   try {
-    const index = campaignsDb.findIndex(c => c.id === id);
-    if (index !== -1) campaignsDb.splice(index, 1);
+    const { error } = await supabase
+      .from('campaigns')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
     revalidatePath('/');
     return { success: true };
   } catch (error) {
@@ -104,6 +138,17 @@ export async function deleteCampaign(id: string) {
   }
 }
 
-export async function fetchCampaigns() {
-  return campaignsDb;
+export async function fetchCampaigns(): Promise<Campaign[]> {
+  try {
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching campaigns:', error);
+    return [];
+  }
 }
