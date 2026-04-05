@@ -6,7 +6,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Plus } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
 import { CityCombobox } from './city-combobox';
 import { StatusSelect } from './status-select';
 import { CampaignSelect } from './campaign-select';
@@ -17,6 +17,7 @@ import { OZONE_CITIES } from '@/data/cities';
 interface OrderRowProps {
   order: Order;
   onUpdate: (order: Order) => void;
+  onDelete: (id: string) => void;
   statusConfig: Record<string, { label: string; className: string }>;
   campaigns: Campaign[];
   isBlacklisted?: boolean;
@@ -26,6 +27,7 @@ interface OrderRowProps {
 export function OrderRow({ 
   order, 
   onUpdate, 
+  onDelete,
   statusConfig, 
   campaigns,
   isBlacklisted = false,
@@ -162,6 +164,17 @@ export function OrderRow({
         </TableCell>
         <TableCell className={`text-right font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
           {netProfit.toFixed(2)} DH
+        </TableCell>
+        <TableCell className="text-slate-200">
+          <Button
+            onClick={() => onDelete(order.id)}
+            variant="outline"
+            size="sm"
+            className="border-red-700/30 text-red-400 hover:bg-red-950/30 text-xs gap-1"
+          >
+            <Trash2 size={14} />
+            Delete
+          </Button>
         </TableCell>
       </TableRow>
       

@@ -11,7 +11,8 @@ import { BlacklistEntry } from '@/types/blacklist';
 interface OrdersTableProps {
   orders: Order[];
   onUpdateOrder: (order: Order) => void;
-  campaigns: Campaign[];
+  onDeleteOrder: (id: string) => void;
+  campaigns?: Campaign[];
   blacklist?: BlacklistEntry[];
   isPhoneBlacklisted?: (phone: string) => boolean;
   onAddToBlacklist?: (phone: string, reason: string) => void;
@@ -26,8 +27,9 @@ const statusConfig = {
 export function OrdersTable({ 
   orders, 
   onUpdateOrder, 
+  onDeleteOrder,
   campaigns,
-  blacklist = [],
+  blacklist = [], 
   isPhoneBlacklisted = () => false,
   onAddToBlacklist = () => {},
 }: OrdersTableProps) {
@@ -47,6 +49,7 @@ export function OrdersTable({
           <TableHead className="text-slate-300 font-semibold">Ad Campaign (Source)</TableHead>
           <TableHead className="text-slate-300 font-semibold">Status</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Net Profit (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -62,8 +65,9 @@ export function OrdersTable({
               key={order.id}
               order={order}
               onUpdate={onUpdateOrder}
+              onDelete={onDeleteOrder}
               statusConfig={statusConfig}
-              campaigns={campaigns}
+              campaigns={campaigns || []}
               isBlacklisted={isPhoneBlacklisted(order.phone)}
               onAddToBlacklist={onAddToBlacklist}
             />

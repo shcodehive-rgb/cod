@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OrdersTable } from '@/components/orders/orders-table';
 import { BlacklistPanel } from '@/components/blacklist-panel';
-import { createOrder, updateOrder } from '@/app/actions';
+import { createOrder, updateOrder, deleteOrder } from '@/app/actions';
 import { Order } from '@/types/order';
 import { Campaign } from '@/types/campaign';
 import { BlacklistEntry } from '@/types/blacklist';
@@ -84,6 +84,19 @@ export function OrdersPage({
     }
   };
 
+  const handleDeleteOrder = (id: string) => {
+    const updatedOrders = orders.filter(o => o.id !== id);
+    setOrders(updatedOrders);
+    onOrdersUpdate?.(updatedOrders);
+
+    // If order has a real ID (not temp), delete from database
+    if (!id.startsWith('temp-')) {
+      startTransition(async () => {
+        await deleteOrder(id);
+      });
+    }
+  };
+
   return (
     <div className="p-8 h-full flex flex-col bg-slate-950">
       {/* Header */}
@@ -128,6 +141,7 @@ export function OrdersPage({
         <OrdersTable
           orders={filteredOrders}
           onUpdateOrder={handleUpdateOrder}
+          onDeleteOrder={handleDeleteOrder}
           campaigns={initialCampaigns}
           blacklist={blacklist}
           isPhoneBlacklisted={isPhoneBlacklisted}

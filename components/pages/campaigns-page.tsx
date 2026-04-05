@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CampaignsTable } from '@/components/campaigns/campaigns-table';
 import { SummaryMetrics } from '@/components/summary-metrics';
-import { createCampaign, updateCampaign } from '@/app/actions';
+import { createCampaign, updateCampaign, deleteCampaign } from '@/app/actions';
 import { Campaign } from '@/types/campaign';
 import { Order } from '@/types/order';
 
@@ -51,6 +51,19 @@ export function CampaignsPage({ initialCampaigns, initialOrders, onCampaignsUpda
     }
   };
 
+  const handleDeleteCampaign = (id: string) => {
+    const updatedCampaigns = campaigns.filter(c => c.id !== id);
+    setCampaigns(updatedCampaigns);
+    onCampaignsUpdate?.(updatedCampaigns);
+
+    // If campaign has a real ID (not temp), delete from database
+    if (!id.startsWith('temp-')) {
+      startTransition(async () => {
+        await deleteCampaign(id);
+      });
+    }
+  };
+
   return (
     <div className="p-8 h-full flex flex-col bg-slate-950">
       {/* Header */}
@@ -79,6 +92,7 @@ export function CampaignsPage({ initialCampaigns, initialOrders, onCampaignsUpda
         <CampaignsTable
           campaigns={campaigns}
           onUpdateCampaign={handleUpdateCampaign}
+          onDeleteCampaign={handleDeleteCampaign}
           orders={initialOrders}
         />
       </div>

@@ -3,6 +3,8 @@
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 import { Campaign } from '@/types/campaign';
 import { Order } from '@/types/order';
 import { cn } from '@/lib/utils';
@@ -10,10 +12,11 @@ import { cn } from '@/lib/utils';
 interface CampaignRowProps {
   campaign: Campaign;
   onUpdate: (campaign: Campaign) => void;
+  onDelete: (id: string) => void;
   orders?: Order[];
 }
 
-export function CampaignRow({ campaign, onUpdate, orders = [] }: CampaignRowProps) {
+export function CampaignRow({ campaign, onUpdate, onDelete, orders = [] }: CampaignRowProps) {
   // Calculate profit from delivered orders linked to this campaign
   const campaignOrders = orders.filter(
     o => o.status === 'delivered' && o.campaignSource === campaign.id
@@ -25,15 +28,16 @@ export function CampaignRow({ campaign, onUpdate, orders = [] }: CampaignRowProp
   }, 0);
 
   // Campaign ROI = Sum of delivered order profits - Actual Spent
-  const netROI = campaignOrdersProfit - campaign.actualSpent;
+  const netROI = campaignOrdersProfit - (parseFloat(campaign.actualSpent?.toString()) || 0);
   
   // Break-even = How many orders with average profit needed to cover spend
   const avgOrderProfit = campaignOrders.length > 0 
     ? campaignOrdersProfit / campaignOrders.length 
     : 0;
+  const actualSpent = parseFloat(campaign.actualSpent?.toString()) || 0;
   const breakEven = avgOrderProfit > 0 
-    ? Math.ceil(campaign.actualSpent / avgOrderProfit)
-    : (campaign.actualSpent > 0 ? 'N/A' : '0');
+    ? Math.ceil(actualSpent / avgOrderProfit)
+    : (actualSpent > 0 ? 'N/A' : '0');
 
   const handleFieldChange = (field: keyof Campaign, value: any) => {
     const updatedCampaign = { ...campaign, [field]: value };
@@ -68,7 +72,7 @@ export function CampaignRow({ campaign, onUpdate, orders = [] }: CampaignRowProp
       <TableCell className="text-right text-slate-200">
         <Input
           type="number"
-          value={campaign.plannedBudget}
+          value={parseFloat(campaign.plannedBudget?.toString()) || 0}
           onChange={(e) => handleFieldChange('plannedBudget', parseFloat(e.target.value) || 0)}
           className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right"
           placeholder="0"
@@ -77,7 +81,7 @@ export function CampaignRow({ campaign, onUpdate, orders = [] }: CampaignRowProp
       <TableCell className="text-right text-slate-200">
         <Input
           type="number"
-          value={campaign.actualSpent}
+          value={actualSpent}
           onChange={(e) => handleFieldChange('actualSpent', parseFloat(e.target.value) || 0)}
           className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right"
           placeholder="0"
@@ -100,6 +104,17 @@ export function CampaignRow({ campaign, onUpdate, orders = [] }: CampaignRowProp
         netROI >= 0 ? 'text-green-400' : 'text-red-400'
       )}>
         {netROI >= 0 ? '+' : ''}{netROI.toFixed(2)} DH
+      </TableCell>
+      <TableCell className="text-slate-200">
+        <Button
+          onClick={() => onDelete(campaign.id)}
+          variant="outline"
+          size="sm"
+          className="border-red-700/30 text-red-400 hover:bg-red-950/30 text-xs gap-1"
+        >
+          <Trash2 size={14} />
+          Delete
+        </Button>
       </TableCell>
     </TableRow>
   );

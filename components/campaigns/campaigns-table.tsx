@@ -8,10 +8,11 @@ import { Order } from '@/types/order';
 interface CampaignsTableProps {
   campaigns: Campaign[];
   onUpdateCampaign: (campaign: Campaign) => void;
+  onDeleteCampaign: (id: string) => void;
   orders?: Order[];
 }
 
-export function CampaignsTable({ campaigns, onUpdateCampaign, orders = [] }: CampaignsTableProps) {
+export function CampaignsTable({ campaigns, onUpdateCampaign, onDeleteCampaign, orders = [] }: CampaignsTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -23,12 +24,13 @@ export function CampaignsTable({ campaigns, onUpdateCampaign, orders = [] }: Cam
           <TableHead className="text-slate-300 font-semibold text-right">Break-Even (Orders)</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Delivered Orders</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Net ROI (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {campaigns.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={7} className="text-center py-8 text-slate-400">
+            <TableCell colSpan={8} className="text-center py-8 text-slate-400">
               No campaigns yet. Create your first campaign to get started.
             </TableCell>
           </TableRow>
@@ -38,6 +40,7 @@ export function CampaignsTable({ campaigns, onUpdateCampaign, orders = [] }: Cam
               key={campaign.id}
               campaign={campaign}
               onUpdate={onUpdateCampaign}
+              onDelete={onDeleteCampaign}
               orders={orders}
             />
           ))
