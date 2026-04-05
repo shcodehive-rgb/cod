@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
 CREATE INDEX IF NOT EXISTS idx_campaigns_is_active ON campaigns(is_active);
 CREATE INDEX IF NOT EXISTS idx_blacklist_phone ON blacklist(phone);
 
--- Enable Row Level Security (optional, for future use)
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
-ALTER TABLE blacklist ENABLE ROW LEVEL SECURITY;
+-- DISABLE Row Level Security for now (service role key will work)
+ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE campaigns DISABLE ROW LEVEL SECURITY;
+ALTER TABLE blacklist DISABLE ROW LEVEL SECURITY;
