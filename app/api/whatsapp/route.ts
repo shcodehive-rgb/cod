@@ -231,6 +231,7 @@ syncToGlobalThis();
 const logger = pino({ level: 'silent' });
 const AUTH_FOLDER = 'auth_info_baileys';
 const STORE_FILE = 'baileys_store.json';
+const ADMIN_JID = '212688771251@s.whatsapp.net';
 
 // --- Initialize Simple In-Memory Store with globalThis persistence ---
 if (!global._waStore) {
@@ -443,7 +444,7 @@ async function handleBot1Receptionist(text: string, jid: string, msg: any) {
   try {
     // Extract customer info from message
     const customerPhone = jid.split('@')[0];
-    const extracted = extractOrderFromMessage(text);
+    const extracted = extractOrderFromMessage(text, customerPhone);
     
     // Ask for Name and City if not provided
     let response = '';
@@ -1025,9 +1026,9 @@ async function handleBot2Manager(text: string, contextInfo: any, adminJid: strin
     await global._waSock.sendMessage(adminJid, { text: confirmation });
     console.log(`✅ [BOT 2] Order ${orderId} updated successfully`);
     
-  } catch (err) {
+  } catch (err: any) {
     console.error(`❌ [BOT 2] Error:`, err);
-    await global._waSock.sendMessage(adminJid, { text: `❌ Error processing command: ${err.message}` });
+    await global._waSock.sendMessage(adminJid, { text: `❌ Error processing command: ${err?.message || 'Unknown error'}` });
   }
 }
 

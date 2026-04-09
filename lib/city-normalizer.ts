@@ -109,15 +109,12 @@ export class CityNormalizer {
       'had soualem': ['had soualem', 'had soualem', 'soualem'],
       'mohammedia': ['mohammedia', 'mohammedia ville', 'mohammadia'],
       'ain attik': ['ain attik', 'ain attik', 'ain attiq'],
-      'ain taoujdat': ['ain taoujdat', 'ain taoujdat', 'ain taoujdate'],
-      'ain sbaa': ['ain sbaa', 'ain sbaa', 'ain sba'],
-      'ain sebaa': ['ain sebaa', 'ain sebaa', 'ain sbaa'],
-      'ain chock': ['ain chock', 'ain chok', 'ain chok'],
-      'ain diab': ['ain diab', 'ain diab', 'ain dyab'],
-      'ain borja': ['ain borja', 'ain borja', 'ain borja'],
-      'ain sebaa': ['ain sebaa', 'ain sebaa', 'ain sbaa'],
-      'ain sbaa': ['ain sbaa', 'ain sbaa', 'ain sba'],
-      'ain harrouda': ['ain harrouda', 'ain harouda', 'ain harouda'],
+      'ain taoujdat': ['ain taoujdat', 'ain taoujdate'],
+      'ain sbaa': ['ain sbaa', 'ain sba'],
+      'ain sebaa': ['ain sebaa'],
+      'ain chock': ['ain chock', 'ain chok'],
+      'ain diab': ['ain diab', 'ain dyab'],
+      'ain borja': ['ain borja'],
     };
     
     // Add variations if they exist

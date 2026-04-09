@@ -3,7 +3,7 @@ import { db } from '@/lib/firebase';
 
 export async function GET() {
   try {
-    console.log('?? CLEANUP SCRIPT DISABLED - DATA SAFETY FIRST');
+    console.log('🚫 CLEANUP SCRIPT DISABLED - DATA SAFETY FIRST');
     
     // SCRIPT DISABLED - DO NOT DELETE ANY DATA
     return NextResponse.json({
@@ -13,7 +13,7 @@ export async function GET() {
     }, { status: 403 });
     
     /* ORIGINAL DISABLED CODE:
-    console.log('?? Starting cleanup of mock data...');
+    console.log('🧹 Starting cleanup of mock data...');
     
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Start of today (April 9)
@@ -78,10 +78,10 @@ export async function GET() {
       
       // Also check for mock data patterns
       const hasMockPatterns = (
-        campaignData.campaignName?.includes('Campaign') ||
-        campaignData.campaignName?.match(/^[A-Z][a-z]+ [A-Z][a-z]+$/) && !campaignData.campaignName?.includes(' ') ||
-        campaignData.platform?.includes('mock_') ||
-        campaignData.campaignId?.includes('mock_')
+        campaignData.campaignName?.includes('Test Campaign') ||
+        campaignData.campaignName?.includes('Mock Campaign') ||
+        campaignData.source?.includes('test') ||
+        campaignData.source?.includes('mock')
       );
       
       if (isMockDate || hasMockPatterns) {
@@ -106,6 +106,7 @@ export async function GET() {
         campaignsFromToday: campaignsSnapshot.size - deletedCampaigns
       }
     });
+    */
     
   } catch (error) {
     console.error('❌ Cleanup failed:', error);

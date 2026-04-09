@@ -40,11 +40,11 @@ export async function GET(req: NextRequest) {
       status: health.healthy ? 200 : 503 
     });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('[HEALTH CHECK] Error:', error);
     return NextResponse.json({ 
       healthy: false, 
-      error: error.message,
+      error: error?.message || 'Unknown error',
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }

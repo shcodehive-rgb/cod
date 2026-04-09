@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { db, FieldValue } from '@/lib/firebase';
+
+interface OrderData {
+  id: string;
+  customerName?: string;
+  phone?: string;
+  created_at?: any;
+  [key: string]: any;
+}
 
 export async function GET() {
   try {
@@ -7,10 +15,13 @@ export async function GET() {
     
     // Check current orders
     const ordersSnapshot = await db.collection('orders').get();
-    const currentOrders = ordersSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const currentOrders: OrderData[] = ordersSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data
+      };
+    });
     
     console.log(`?? Current orders count: ${currentOrders.length}`);
     
@@ -45,9 +56,9 @@ export async function GET() {
         totalOrders: currentOrders.length,
         orders: currentOrders.map(order => ({
           id: order.id,
-          customerName: order.customerName,
-          phone: order.phone,
-          created_at: order.created_at
+          customerName: order.customerName || 'Unknown',
+          phone: order.phone || 'Unknown',
+          created_at: order.created_at || 'Unknown'
         }))
       },
       recoveryOptions,
@@ -88,8 +99,8 @@ export async function POST(request: Request) {
         // Remove any client-side timestamps and use server timestamps
         const orderData = {
           ...order,
-          created_at: db.FieldValue.serverTimestamp(),
-          updated_at: db.FieldValue.serverTimestamp(),
+          created_at: FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
         };
         
         // Remove any ID that might cause conflicts
