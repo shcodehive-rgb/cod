@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CampaignsTable } from '@/components/campaigns/campaigns-table';
@@ -18,6 +18,9 @@ interface CampaignsPageProps {
 export function CampaignsPage({ initialCampaigns, initialOrders, onCampaignsUpdate }: CampaignsPageProps) {
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [isPending, startTransition] = useTransition();
+  const [pendingUpdate, setPendingUpdate] = useState<Campaign | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [pendingCreate, setPendingCreate] = useState<Campaign | null>(null);
 
   const handleAddCampaign = () => {
     const newCampaign: Campaign = {
@@ -28,41 +31,69 @@ export function CampaignsPage({ initialCampaigns, initialOrders, onCampaignsUpda
       actualSpent: 0,
       ordersGenerated: 0,
     };
-    const updatedCampaigns = [...campaigns, newCampaign];
-    setCampaigns(updatedCampaigns);
-    onCampaignsUpdate?.(updatedCampaigns);
+    
+    setCampaigns(prev => {
+      const updatedCampaigns = [...prev, newCampaign];
+      onCampaignsUpdate?.(updatedCampaigns);
+      return updatedCampaigns;
+    });
   };
 
   const handleUpdateCampaign = (updatedCampaign: Campaign) => {
-    const updatedCampaigns = campaigns.map(c => c.id === updatedCampaign.id ? updatedCampaign : c);
-    setCampaigns(updatedCampaigns);
-    onCampaignsUpdate?.(updatedCampaigns);
+    setCampaigns(prev => {
+      const updatedCampaigns = prev.map(c => c.id === updatedCampaign.id ? updatedCampaign : c);
+      onCampaignsUpdate?.(updatedCampaigns);
+      return updatedCampaigns;
+    });
 
-    // If campaign has a real ID (not temp), save to database
+    // Set pending operation to be handled by useEffect
     if (!updatedCampaign.id.startsWith('temp-')) {
-      startTransition(async () => {
-        await updateCampaign(updatedCampaign.id, updatedCampaign);
-      });
+      setPendingUpdate(updatedCampaign);
     } else {
-      // First time saving - create the campaign
-      startTransition(async () => {
-        await createCampaign(updatedCampaign);
-      });
+      setPendingCreate(updatedCampaign);
     }
   };
 
   const handleDeleteCampaign = (id: string) => {
-    const updatedCampaigns = campaigns.filter(c => c.id !== id);
-    setCampaigns(updatedCampaigns);
-    onCampaignsUpdate?.(updatedCampaigns);
+    setCampaigns(prev => {
+      const updatedCampaigns = prev.filter(c => c.id !== id);
+      onCampaignsUpdate?.(updatedCampaigns);
+      return updatedCampaigns;
+    });
 
-    // If campaign has a real ID (not temp), delete from database
+    // Set pending operation to be handled by useEffect
     if (!id.startsWith('temp-')) {
-      startTransition(async () => {
-        await deleteCampaign(id);
-      });
+      setPendingDelete(id);
     }
   };
+
+  // Handle pending operations in useEffect to avoid startTransition during render
+  useEffect(() => {
+    if (pendingUpdate) {
+      startTransition(async () => {
+        await updateCampaign(pendingUpdate.id, pendingUpdate);
+        setPendingUpdate(null);
+      });
+    }
+  }, [pendingUpdate]);
+
+  useEffect(() => {
+    if (pendingDelete) {
+      startTransition(async () => {
+        await deleteCampaign(pendingDelete);
+        setPendingDelete(null);
+      });
+    }
+  }, [pendingDelete]);
+
+  useEffect(() => {
+    if (pendingCreate) {
+      startTransition(async () => {
+        await createCampaign(pendingCreate);
+        setPendingCreate(null);
+      });
+    }
+  }, [pendingCreate]);
 
   return (
     <div className="p-8 h-full flex flex-col bg-slate-950">

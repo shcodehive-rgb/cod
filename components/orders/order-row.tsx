@@ -6,13 +6,15 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Plus, Trash2, ExternalLink } from 'lucide-react';
 import { CityCombobox } from './city-combobox';
 import { StatusSelect } from './status-select';
 import { CampaignSelect } from './campaign-select';
 import { Order, OrderStatus } from '@/types/order';
 import { Campaign } from '@/types/campaign';
 import { OZONE_CITIES } from '@/data/cities';
+import { format } from 'date-fns';
+import { SuppressHydration } from '@/components/ui/suppress-hydration';
 
 interface OrderRowProps {
   order: Order;
@@ -52,111 +54,176 @@ export function OrderRow({
 
   const handleAddToBlacklist = () => {
     if (blacklistReason.trim()) {
-      onAddToBlacklist(order.phone, blacklistReason);
+      // Include customer name in the reason for better tracking
+      const fullReason = `${order.customerName ? `${order.customerName} - ` : ''}${blacklistReason}`;
+      onAddToBlacklist(order.phone, fullReason);
       setBlacklistReason('');
       setShowBlacklistDialog(false);
     }
   };
 
-  // Calculate net profit for this order with new e-commerce logic
-  const netProfit = 
-    order.status === 'delivered' 
-      ? order.sellingPrice - order.productCost - order.packagingCost - order.shippingFee
-      : order.status === 'returned'
-      ? 0 - order.returnFee - order.packagingCost
-      : 0;
+  // Calculate net profit for this order with dynamic e-commerce logic
+  const calculateNetProfit = (status: OrderStatus, sellingPrice: number, productCost: number, packagingCost: number, shippingFee: number, returnFee: number) => {
+    switch (status) {
+      case 'delivered':
+        // Net Profit = Selling Price - Product Cost - Packaging - Shipping Fee
+        return sellingPrice - productCost - packagingCost - shippingFee;
+      
+      case 'returned':
+        // Net Profit = 0 - Packaging - Shipping Fee - Return Fee (item returned to inventory)
+        return 0 - packagingCost - shippingFee - returnFee;
+      
+      case 'shipped':
+        // Expected Profit for shipped orders
+        return sellingPrice - productCost - packagingCost - shippingFee;
+      
+      case 'pending':
+        // Expected Profit for pending orders (can be shown as 0 or expected)
+        return 0; // Or: sellingPrice - productCost - packagingCost - shippingFee
+      
+      default:
+        return 0;
+    }
+  };
+
+  const netProfit = calculateNetProfit(
+    order.status,
+    order.sellingPrice,
+    order.productCost,
+    order.packagingCost,
+    order.shippingFee,
+    order.returnFee
+  );
 
   return (
     <>
       <TableRow className={`border-slate-800 hover:bg-slate-800/30 ${
         isBlacklisted ? 'bg-red-950/30 border-l-4 border-l-red-700' : ''
       }`}>
-        <TableCell className="text-slate-200">
-          <Input
-            value={order.customerName}
-            onChange={(e) => handleFieldChange('customerName', e.target.value)}
-            className="bg-slate-950 border-slate-700 text-white text-sm h-8"
-            placeholder="Customer name"
-          />
+        <TableCell className="text-slate-200 min-w-[200px]">
+          <SuppressHydration>
+            <Input
+              value={order.customerName}
+              onChange={(e) => handleFieldChange('customerName', e.target.value)}
+              className="bg-slate-950 border-slate-700 text-white text-sm h-8 w-full"
+              placeholder="Customer name"
+            />
+          </SuppressHydration>
         </TableCell>
-        <TableCell className="text-slate-200">
+        <TableCell className="text-slate-400 text-xs min-w-[160px]">
+          {order.created_at ? format(new Date(order.created_at), 'dd MMM yyyy, HH:mm') : 'Old Order'}
+        </TableCell>
+        <TableCell className="text-slate-200 min-w-[180px]">
           <div className="flex items-center gap-2">
             {isBlacklisted && <AlertTriangle size={16} className="text-red-500 flex-shrink-0" />}
-            <Input
-              value={order.phone}
-              onChange={(e) => handleFieldChange('phone', e.target.value)}
-              className="bg-slate-950 border-slate-700 text-white text-sm h-8"
-              placeholder="Phone"
-            />
+            <div className="relative group flex-1">
+              <SuppressHydration>
+                <Input
+                  value={order.phone}
+                  onChange={(e) => handleFieldChange('phone', e.target.value)}
+                  className="bg-slate-950 border-slate-700 text-white text-sm h-8 w-full pr-8"
+                  placeholder="Phone"
+                />
+              </SuppressHydration>
+              {order.phone && (
+                <a 
+                  href={`https://wa.me/${order.phone.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute right-2 top-1.5 text-emerald-500 hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Chat on WhatsApp"
+                >
+                  <ExternalLink size={14} />
+                </a>
+              )}
+            </div>
           </div>
         </TableCell>
-        <TableCell className="text-slate-200">
+        <TableCell className="text-slate-200 min-w-[150px]">
           <CityCombobox
             value={order.city}
             onSelect={(city) => handleFieldChange('city', city)}
           />
         </TableCell>
-        <TableCell className="text-slate-200">
-          <Input
-            value={order.product}
-            onChange={(e) => handleFieldChange('product', e.target.value)}
-            className="bg-slate-950 border-slate-700 text-white text-sm h-8"
-            placeholder="Product"
-          />
+        <TableCell className="text-slate-200 min-w-[180px]">
+          <SuppressHydration>
+            <Input
+              value={order.product}
+              onChange={(e) => handleFieldChange('product', e.target.value)}
+              className="bg-slate-950 border-slate-700 text-white text-sm h-8 w-full"
+              placeholder="Product"
+            />
+          </SuppressHydration>
         </TableCell>
-        <TableCell className="text-right text-slate-200">
-          <Input
-            type="number"
-            value={order.sellingPrice}
-            onChange={(e) => handleFieldChange('sellingPrice', parseFloat(e.target.value) || 0)}
-            className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right"
-            placeholder="0"
-          />
+        <TableCell className="text-right text-slate-200 min-w-[120px]">
+          <SuppressHydration>
+            <Input
+              type="number"
+              min="0"
+              value={order.sellingPrice}
+              onChange={(e) => handleFieldChange('sellingPrice', Number(e.target.value) || 0)}
+              className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right w-full"
+              placeholder="0"
+            />
+          </SuppressHydration>
         </TableCell>
-        <TableCell className="text-right text-slate-200">
-          <Input
-            type="number"
-            value={order.productCost}
-            onChange={(e) => handleFieldChange('productCost', parseFloat(e.target.value) || 0)}
-            className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right"
-            placeholder="0"
-          />
+        <TableCell className="text-right text-slate-200 min-w-[120px]">
+          <SuppressHydration>
+            <Input
+              type="number"
+              min="0"
+              value={order.productCost}
+              onChange={(e) => handleFieldChange('productCost', Number(e.target.value) || 0)}
+              className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right w-full"
+              placeholder="0"
+            />
+          </SuppressHydration>
         </TableCell>
-        <TableCell className="text-right text-slate-200">
-          <Input
-            type="number"
-            value={order.packagingCost}
-            onChange={(e) => handleFieldChange('packagingCost', parseFloat(e.target.value) || 5)}
-            className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right"
-            placeholder="5"
-          />
+        <TableCell className="text-right text-slate-200 min-w-[100px]">
+          <SuppressHydration>
+            <Input
+              type="number"
+              min="0"
+              value={order.packagingCost}
+              onChange={(e) => handleFieldChange('packagingCost', Number(e.target.value) || 0)}
+              className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right w-full"
+              placeholder="0"
+            />
+          </SuppressHydration>
         </TableCell>
-        <TableCell className="text-right text-slate-200">
-          <Input
-            type="number"
-            value={order.shippingFee}
-            disabled
-            className="bg-slate-800 border-slate-700 text-slate-300 text-sm h-8 text-right cursor-not-allowed"
-            placeholder="Auto-filled"
-          />
+        <TableCell className="text-right text-slate-200 min-w-[100px]">
+          <SuppressHydration>
+            <Input
+              type="number"
+              min="0"
+              value={order.shippingFee}
+              onChange={(e) => handleFieldChange('shippingFee', Number(e.target.value) || 0)}
+              className="bg-slate-800 border-slate-700 text-slate-300 text-sm h-8 text-right cursor-not-allowed w-full"
+              placeholder="Auto-filled"
+              disabled
+            />
+          </SuppressHydration>
         </TableCell>
-        <TableCell className="text-right text-slate-200">
-          <Input
-            type="number"
-            value={order.returnFee}
-            onChange={(e) => handleFieldChange('returnFee', parseFloat(e.target.value) || 15)}
-            className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right"
-            placeholder="15"
-          />
+        <TableCell className="text-right text-slate-200 min-w-[100px]">
+          <SuppressHydration>
+            <Input
+              type="number"
+              min="0"
+              value={order.returnFee}
+              onChange={(e) => handleFieldChange('returnFee', Number(e.target.value) || 0)}
+              className="bg-slate-950 border-slate-700 text-white text-sm h-8 text-right w-full"
+              placeholder="0"
+            />
+          </SuppressHydration>
         </TableCell>
-        <TableCell className="text-slate-200">
+        <TableCell className="text-slate-200 min-w-[150px]">
           <CampaignSelect
             value={order.campaignSource}
             onSelect={(source) => handleFieldChange('campaignSource', source)}
             campaigns={campaigns}
           />
         </TableCell>
-        <TableCell className="text-slate-200">
+        <TableCell className="text-slate-200 min-w-[100px]">
           <StatusSelect
             value={order.status}
             onSelect={(status) => handleFieldChange('status', status)}
@@ -181,7 +248,7 @@ export function OrderRow({
       {/* Blacklist Dialog Row */}
       {showBlacklistDialog && (
         <TableRow className="bg-red-950/20 border-slate-700">
-          <TableCell colSpan={12} className="py-4">
+          <TableCell colSpan={13} className="py-4">
             <div className="flex items-center gap-3 bg-red-950/30 p-4 rounded-lg border border-red-700/30">
               <div className="flex-1">
                 <p className="text-sm text-red-300 mb-2">Add to blacklist: {order.phone}</p>
@@ -219,7 +286,7 @@ export function OrderRow({
       {/* Action Menu Row */}
       {!isBlacklisted && !showBlacklistDialog && (
         <TableRow className="bg-slate-900/50 border-slate-800">
-          <TableCell colSpan={12} className="py-2">
+          <TableCell colSpan={13} className="py-2">
             <div className="flex justify-end">
               <Button
                 onClick={() => setShowBlacklistDialog(true)}

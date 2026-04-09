@@ -43,6 +43,7 @@ export function OrdersPage({
   );
 
   const handleAddOrder = () => {
+    const currentTimestamp = new Date().toISOString();
     const newOrder: Order = {
       id: `temp-${Date.now()}`,
       customerName: '',
@@ -53,9 +54,11 @@ export function OrdersPage({
       productCost: 0,
       packagingCost: 5,
       shippingFee: 0,
-      returnFee: 15,
+      returnFee: 0,
       status: 'pending',
       campaignSource: 'Organic',
+      created_at: currentTimestamp,
+      updated_at: currentTimestamp,
     };
     const updatedOrders = [...orders, newOrder];
     setOrders(updatedOrders);
@@ -63,6 +66,20 @@ export function OrdersPage({
   };
 
   const handleUpdateOrder = (updatedOrder: Order) => {
+    // Check if phone is blacklisted before saving
+    if (updatedOrder.phone && isPhoneBlacklisted(updatedOrder.phone)) {
+      const confirmed = window.confirm(
+        '⚠️ Warning: This customer is blacklisted!\n\n' +
+        'Phone: ' + updatedOrder.phone + '\n' +
+        'This customer has been flagged for problematic orders.\n\n' +
+        'Do you want to continue saving this order?'
+      );
+      
+      if (!confirmed) {
+        return; // Don't save the order
+      }
+    }
+
     const updatedOrders = orders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
     setOrders(updatedOrders);
     onOrdersUpdate?.(updatedOrders);

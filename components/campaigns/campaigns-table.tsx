@@ -21,16 +21,17 @@ export function CampaignsTable({ campaigns, onUpdateCampaign, onDeleteCampaign, 
           <TableHead className="text-slate-300 font-semibold">Status</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Planned Budget (DH)</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Actual Spent (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Msgs</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Break-Even (Orders)</TableHead>
-          <TableHead className="text-slate-300 font-semibold text-right">Delivered Orders</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Net ROI (DH)</TableHead>
-          <TableHead className="text-slate-300 font-semibold">Actions</TableHead>
+          <TableHead className="text-slate-300 font-semibold w-[350px]">Meta Integration</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {campaigns.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={8} className="text-center py-8 text-slate-400">
+            <TableCell colSpan={9} className="text-center py-8 text-slate-400">
               No campaigns yet. Create your first campaign to get started.
             </TableCell>
           </TableRow>

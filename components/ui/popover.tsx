@@ -12,9 +12,10 @@ function Popover({
 }
 
 function PopoverTrigger({
+  key,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
-  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />
+  return <PopoverPrimitive.Trigger key={key} data-slot="popover-trigger" {...props} />
 }
 
 function PopoverContent({

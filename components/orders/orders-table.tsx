@@ -20,6 +20,7 @@ interface OrdersTableProps {
 
 const statusConfig = {
   pending: { label: 'Pending', className: 'bg-yellow-900 text-yellow-200 hover:bg-yellow-800' },
+  shipped: { label: 'Shipped', className: 'bg-blue-900 text-blue-200 hover:bg-blue-800' },
   delivered: { label: 'Delivered', className: 'bg-green-900 text-green-200 hover:bg-green-800' },
   returned: { label: 'Returned', className: 'bg-red-900 text-red-200 hover:bg-red-800' },
 };
@@ -37,18 +38,19 @@ export function OrdersTable({
     <Table>
       <TableHeader>
         <TableRow className="border-slate-800 hover:bg-slate-800/50">
-          <TableHead className="text-slate-300 font-semibold">Customer Name</TableHead>
-          <TableHead className="text-slate-300 font-semibold">Phone</TableHead>
-          <TableHead className="text-slate-300 font-semibold">City</TableHead>
-          <TableHead className="text-slate-300 font-semibold">Product</TableHead>
-          <TableHead className="text-slate-300 font-semibold text-right">Selling Price (DH)</TableHead>
-          <TableHead className="text-slate-300 font-semibold text-right">Product Cost (DH)</TableHead>
-          <TableHead className="text-slate-300 font-semibold text-right">Packaging (DH)</TableHead>
-          <TableHead className="text-slate-300 font-semibold text-right">Shipping Fee (DH)</TableHead>
-          <TableHead className="text-slate-300 font-semibold text-right">Return Fee (DH)</TableHead>
-          <TableHead className="text-slate-300 font-semibold">Ad Campaign (Source)</TableHead>
-          <TableHead className="text-slate-300 font-semibold">Status</TableHead>
-          <TableHead className="text-slate-300 font-semibold text-right">Net Profit (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold min-w-[200px]">Customer Name</TableHead>
+          <TableHead className="text-slate-300 font-semibold min-w-[160px]">Date & Time</TableHead>
+          <TableHead className="text-slate-300 font-semibold min-w-[180px]">Phone</TableHead>
+          <TableHead className="text-slate-300 font-semibold min-w-[150px]">City</TableHead>
+          <TableHead className="text-slate-300 font-semibold min-w-[180px]">Product</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right min-w-[120px]">Selling Price (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right min-w-[120px]">Product Cost (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right min-w-[100px]">Packaging (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right min-w-[100px]">Shipping Fee (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right min-w-[100px]">Return Fee (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold min-w-[150px]">Ad Campaign (Source)</TableHead>
+          <TableHead className="text-slate-300 font-semibold min-w-[100px]">Status</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right min-w-[120px]">Net Profit (DH)</TableHead>
           <TableHead className="text-slate-300 font-semibold">Actions</TableHead>
         </TableRow>
       </TableHeader>

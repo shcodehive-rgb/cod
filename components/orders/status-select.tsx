@@ -20,6 +20,10 @@ const statusConfig: Record<OrderStatus, { label: string; className: string }> = 
     label: 'Pending',
     className: 'bg-yellow-900 text-yellow-200 hover:bg-yellow-800',
   },
+  shipped: {
+    label: 'Shipped',
+    className: 'bg-blue-900 text-blue-200 hover:bg-blue-800',
+  },
   delivered: {
     label: 'Delivered',
     className: 'bg-green-900 text-green-200 hover:bg-green-800',
@@ -40,6 +44,11 @@ export function StatusSelect({ value, onSelect }: StatusSelectProps) {
         <SelectItem value="pending" className="text-slate-200 focus:bg-slate-800">
           <Badge variant="outline" className={statusConfig.pending.className}>
             {statusConfig.pending.label}
+          </Badge>
+        </SelectItem>
+        <SelectItem value="shipped" className="text-slate-200 focus:bg-slate-800">
+          <Badge variant="outline" className={statusConfig.shipped.className}>
+            {statusConfig.shipped.label}
           </Badge>
         </SelectItem>
         <SelectItem value="delivered" className="text-slate-200 focus:bg-slate-800">

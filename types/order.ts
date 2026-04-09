@@ -1,4 +1,4 @@
-export type OrderStatus = 'pending' | 'delivered' | 'returned';
+export type OrderStatus = 'pending' | 'shipped' | 'delivered' | 'returned';
 
 export interface Order {
   id: string;
@@ -12,5 +12,10 @@ export interface Order {
   shippingFee: number; // Delivery company cost
   returnFee: number; // Return delivery cost (default 15 DH for Ozone)
   status: OrderStatus;
-  campaignSource: string; // 'Organic' or campaign ID
+  campaignSource: string; // Campaign Name or 'WhatsApp Organic'
+  campaignId?: string; // The Firestore document ID of the active campaign
+  created_at: string;
+  updated_at: string;
+  fbclid?: string;
+  eventId?: string;
 }

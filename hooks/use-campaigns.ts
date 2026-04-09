@@ -1,27 +1,8 @@
 import { useState } from 'react';
 import { Campaign } from '@/types/campaign';
 
-const initialCampaigns: Campaign[] = [
-  {
-    id: '1',
-    name: 'Summer Sale Campaign',
-    isActive: true,
-    plannedBudget: 300,
-    actualSpent: 200,
-    ordersGenerated: 8,
-  },
-  {
-    id: '2',
-    name: 'Ramadan Special',
-    isActive: false,
-    plannedBudget: 250,
-    actualSpent: 150,
-    ordersGenerated: 5,
-  },
-];
-
 export function useCampaigns() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   const addCampaign = () => {
     const newCampaign: Campaign = {

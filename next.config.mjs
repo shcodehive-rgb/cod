@@ -6,6 +6,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    serverExternalPackages: ['@whiskeysockets/baileys', 'jimp'],
+  },
 }
 
 export default nextConfig
