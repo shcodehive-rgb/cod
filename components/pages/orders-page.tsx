@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { useState, useTransition, useEffect } from 'react';
+import { Plus, Search, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OrdersTable } from '@/components/orders/orders-table';
@@ -11,6 +11,7 @@ import { Order } from '@/types/order';
 import { Campaign } from '@/types/campaign';
 import { BlacklistEntry } from '@/types/blacklist';
 import { OZONE_CITIES } from '@/data/cities';
+import { autoPopulateFromUrlParams, shouldAutoPopulate, getAutoPopulationMessage } from '@/lib/url-params';
 
 interface OrdersPageProps {
   initialOrders: Order[];
@@ -34,6 +35,7 @@ export function OrdersPage({
   const [orders, setOrders] = useState(initialOrders);
   const [searchQuery, setSearchQuery] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [autoPopMessage, setAutoPopMessage] = useState<string | null>(null);
 
   const filteredOrders = orders.filter(
     (order) =>
@@ -43,7 +45,18 @@ export function OrdersPage({
   );
 
   const handleAddOrder = () => {
-    const currentTimestamp = new Date().toISOString();
+    // Get auto-populated data from URL parameters
+    const autoPopulatedData = shouldAutoPopulate() 
+      ? autoPopulateFromUrlParams(initialCampaigns)
+      : {};
+    
+    // Set auto-population message if applicable
+    if (shouldAutoPopulate()) {
+      setAutoPopMessage(getAutoPopulationMessage());
+      // Clear message after 5 seconds
+      setTimeout(() => setAutoPopMessage(null), 5000);
+    }
+    
     const newOrder: Order = {
       id: `temp-${Date.now()}`,
       customerName: '',
@@ -57,8 +70,10 @@ export function OrdersPage({
       returnFee: 0,
       status: 'pending',
       campaignSource: 'Organic',
-      created_at: currentTimestamp,
-      updated_at: currentTimestamp,
+      // CRITICAL: NO client-side timestamps - server will set them
+      created_at: '',
+      updated_at: '',
+      ...autoPopulatedData, // Apply auto-populated fields
     };
     const updatedOrders = [...orders, newOrder];
     setOrders(updatedOrders);
@@ -94,8 +109,20 @@ export function OrdersPage({
       startTransition(async () => {
         const result = await createOrder(updatedOrder);
         if (result.success) {
-          // After creating, refetch to get real ID
-          // This will be handled by revalidatePath in the Server Action
+          // Update the local order with real ID and server timestamp
+          const realOrder = result.data as Order;
+          console.log('Order created with server timestamp:', realOrder.created_at);
+          const updatedOrders = orders.map(o => 
+            o.id === updatedOrder.id ? realOrder : o
+          );
+          setOrders(updatedOrders);
+          onOrdersUpdate?.(updatedOrders);
+        } else {
+          console.error('Failed to create order:', result.error);
+          // Remove the temp order if creation failed
+          const updatedOrders = orders.filter(o => o.id !== updatedOrder.id);
+          setOrders(updatedOrders);
+          onOrdersUpdate?.(updatedOrders);
         }
       });
     }
@@ -121,6 +148,16 @@ export function OrdersPage({
         <h2 className="text-3xl font-bold text-white mb-2">Orders</h2>
         <p className="text-slate-400">Manage your Cash-On-Delivery orders</p>
       </div>
+
+      {/* Auto-population Message */}
+      {autoPopMessage && (
+        <div className="mb-6 p-4 bg-blue-950/30 border border-blue-700/30 rounded-lg">
+          <div className="flex items-center gap-2 text-blue-300">
+            <Info size={16} />
+            <span className="text-sm">{autoPopMessage}</span>
+          </div>
+        </div>
+      )}
 
       {/* Blacklist Panel */}
       {blacklist.length > 0 && (

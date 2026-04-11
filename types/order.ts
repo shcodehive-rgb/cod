@@ -1,4 +1,4 @@
-export type OrderStatus = 'pending' | 'shipped' | 'delivered' | 'returned';
+export type OrderStatus = 'pending' | 'shipped' | 'delivered' | 'confirmed' | 'returned';
 
 export interface Order {
   id: string;
@@ -14,6 +14,8 @@ export interface Order {
   status: OrderStatus;
   campaignSource: string; // Campaign Name or 'WhatsApp Organic'
   campaignId?: string; // The Firestore document ID of the active campaign
+  adCopyId?: string; // The ID of the specific ad creative
+  adCopyName?: string; // The name of the specific ad creative
   created_at: string;
   updated_at: string;
   fbclid?: string;

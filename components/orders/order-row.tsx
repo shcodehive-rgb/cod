@@ -10,6 +10,7 @@ import { AlertTriangle, Plus, Trash2, ExternalLink } from 'lucide-react';
 import { CityCombobox } from './city-combobox';
 import { StatusSelect } from './status-select';
 import { CampaignSelect } from './campaign-select';
+import { AdCopySelect } from './ad-copy-select';
 import { Order, OrderStatus } from '@/types/order';
 import { Campaign } from '@/types/campaign';
 import { OZONE_CITIES } from '@/data/cities';
@@ -111,7 +112,12 @@ export function OrderRow({
           </SuppressHydration>
         </TableCell>
         <TableCell className="text-slate-400 text-xs min-w-[160px]">
-          {order.created_at ? format(new Date(order.created_at), 'dd MMM yyyy, HH:mm') : 'Old Order'}
+          {order.created_at ? 
+            format(new Date(order.created_at), 'dd/MM/yyyy HH:mm') : 
+            order.id.startsWith('temp-') ? 
+              <span className="text-blue-400">En cours...</span> : 
+              <span className="text-amber-400">No Timestamp</span>
+          }
         </TableCell>
         <TableCell className="text-slate-200 min-w-[180px]">
           <div className="flex items-center gap-2">
@@ -223,6 +229,17 @@ export function OrderRow({
             campaigns={campaigns}
           />
         </TableCell>
+        <TableCell className="text-slate-200 min-w-[150px]">
+          <AdCopySelect
+            value={order.adCopyId || ''}
+            onSelect={(adCopyId, adCopyName) => {
+              handleFieldChange('adCopyId', adCopyId);
+              handleFieldChange('adCopyName', adCopyName);
+            }}
+            campaigns={campaigns}
+            selectedCampaignId={order.campaignSource === 'Organic' ? undefined : order.campaignSource}
+          />
+        </TableCell>
         <TableCell className="text-slate-200 min-w-[100px]">
           <StatusSelect
             value={order.status}
@@ -248,7 +265,7 @@ export function OrderRow({
       {/* Blacklist Dialog Row */}
       {showBlacklistDialog && (
         <TableRow className="bg-red-950/20 border-slate-700">
-          <TableCell colSpan={13} className="py-4">
+          <TableCell colSpan={14} className="py-4">
             <div className="flex items-center gap-3 bg-red-950/30 p-4 rounded-lg border border-red-700/30">
               <div className="flex-1">
                 <p className="text-sm text-red-300 mb-2">Add to blacklist: {order.phone}</p>
@@ -286,7 +303,7 @@ export function OrderRow({
       {/* Action Menu Row */}
       {!isBlacklisted && !showBlacklistDialog && (
         <TableRow className="bg-slate-900/50 border-slate-800">
-          <TableCell colSpan={13} className="py-2">
+          <TableCell colSpan={14} className="py-2">
             <div className="flex justify-end">
               <Button
                 onClick={() => setShowBlacklistDialog(true)}

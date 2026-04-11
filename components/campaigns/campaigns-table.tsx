@@ -1,7 +1,7 @@
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CampaignRow } from './campaign-row';
+import { ExpandableCampaignRow } from './expandable-campaign-row';
 import { Campaign } from '@/types/campaign';
 import { Order } from '@/types/order';
 
@@ -22,22 +22,26 @@ export function CampaignsTable({ campaigns, onUpdateCampaign, onDeleteCampaign, 
           <TableHead className="text-slate-300 font-semibold text-right">Planned Budget (DH)</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Actual Spent (DH)</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Msgs</TableHead>
-          <TableHead className="text-slate-300 font-semibold text-right">Break-Even (Orders)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Confirmed Orders</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Net ROI (DH)</TableHead>
-          <TableHead className="text-slate-300 font-semibold w-[350px]">Meta Integration</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">CPA (DH)</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">CTR%</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Lead Rate%</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Confirm Rate%</TableHead>
+          <TableHead className="text-slate-300 font-semibold text-right">Delivery Rate%</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {campaigns.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={9} className="text-center py-8 text-slate-400">
+            <TableCell colSpan={13} className="text-center py-8 text-slate-400">
               No campaigns yet. Create your first campaign to get started.
             </TableCell>
           </TableRow>
         ) : (
           campaigns.map((campaign) => (
-            <CampaignRow
+            <ExpandableCampaignRow
               key={campaign.id}
               campaign={campaign}
               onUpdate={onUpdateCampaign}

@@ -6,6 +6,79 @@ import { db, FieldValue } from '@/lib/firebase';
 import { Order } from '@/types/order';
 import { Campaign } from '@/types/campaign';
 import { BlacklistEntry } from '@/types/blacklist';
+import { sendStatusChangePurchaseEvent, CAPIOrderData } from '@/lib/facebook-capi';
+
+// ==================== CAPI HELPER FUNCTIONS ====================
+
+async function sendCAPIEventForOrderStatusChange(orderId: string, newStatus: 'delivered' | 'confirmed') {
+  try {
+    console.log(`🚀 [CAPI] Sending Purchase event for order ${orderId} with status ${newStatus}`);
+    
+    // Get the updated order data
+    const orderDoc = await db.collection('orders').doc(orderId).get();
+    const order = orderDoc.data() as Order;
+    
+    if (!order) {
+      console.error('❌ [CAPI] Order not found:', orderId);
+      return;
+    }
+    
+    // Get campaign data if order is linked to a campaign
+    let campaignData: Campaign | null = null;
+    if (order.campaignId && order.campaignId !== 'Organic') {
+      const campaignDoc = await db.collection('campaigns').doc(order.campaignId).get();
+      campaignData = campaignDoc.data() as Campaign;
+    }
+    
+    // Skip CAPI if no campaign or campaign has no pixel ID
+    if (!campaignData?.pixelId) {
+      console.log(`⚠️ [CAPI] Skipping CAPI event - no pixel ID configured for order ${orderId}`);
+      return;
+    }
+    
+    // Find the ad copy to get the Facebook Ad ID
+    let adId: string | undefined;
+    if (order.adCopyId && campaignData.adCopies) {
+      const adCopy = campaignData.adCopies.find(ac => ac.id === order.adCopyId);
+      adId = adCopy?.adId;
+    }
+    
+    // Prepare CAPI data
+    const capiData: CAPIOrderData = {
+      orderId: order.id,
+      customerName: order.customerName,
+      phone: order.phone,
+      city: order.city,
+      sellingPrice: order.sellingPrice,
+      currency: 'MAD',
+      campaignId: order.campaignId,
+      adId: adId, // Include specific ad creative ID for optimization
+      fbc: order.fbclid, // Note: might need to extract from URL parameters
+    };
+    
+    // Send the CAPI event with the exact server timestamp from the order
+    const result = await sendStatusChangePurchaseEvent(
+      capiData,
+      campaignData.pixelId,
+      campaignData.capiAccessToken || process.env.META_CAPI_ACCESS_TOKEN || '',
+      order.created_at ? new Date(order.created_at) : new Date() // Use the exact server timestamp from Firestore
+    );
+    
+    if (result.success) {
+      console.log(`✅ [CAPI] Purchase event sent successfully for order ${orderId}`);
+      // Update the order with the event ID for tracking
+      await db.collection('orders').doc(orderId).update({
+        eventId: result.eventId,
+        updated_at: FieldValue.serverTimestamp(),
+      });
+    } else {
+      console.error(`❌ [CAPI] Failed to send Purchase event for order ${orderId}:`, result.error);
+    }
+    
+  } catch (error) {
+    console.error(`❌ [CAPI] Error sending Purchase event for order ${orderId}:`, error);
+  }
+}
 
 // ==================== ORDER ACTIONS ====================
 
@@ -30,9 +103,25 @@ export async function createOrder(data: Partial<Order>) {
     // Direct Firestore Admin SDK usage
     const result = await db.collection('orders').add(orderData);
     
-    console.log('✅ Order created successfully with REAL timestamp:', result.id);
+    // Fetch the created document to get the actual server timestamp
+    const doc = await db.collection('orders').doc(result.id).get();
+    const createdOrder = doc.data();
+    
+    // Convert Firestore timestamps to ISO strings
+    const createdAt = createdOrder?.created_at?.toDate?.()?.toISOString() || null;
+    const updatedAt = createdOrder?.updated_at?.toDate?.()?.toISOString() || null;
+    
+    console.log('Order created successfully with REAL timestamp:', result.id, createdAt);
     revalidatePath('/');
-    return { success: true, data: { ...orderData, id: result.id } };
+    return { 
+      success: true, 
+      data: { 
+        ...createdOrder, 
+        id: result.id,
+        created_at: createdAt,
+        updated_at: updatedAt,
+      } 
+    };
   } catch (error) {
     console.error('❌ Failed to create order:', error);
     return { success: false, error: String(error) };
@@ -43,10 +132,23 @@ export async function updateOrder(id: string, data: Partial<Order>) {
   try {
     console.log('🔄 Updating order:', id, 'with data:', data);
     
+    // Check if status is changing to 'delivered' or 'confirmed' for CAPI event
+    const orderDoc = await db.collection('orders').doc(id).get();
+    const currentOrder = orderDoc.data() as Order;
+    
+    const isStatusChangingToDeliveredOrConfirmed = 
+      currentOrder.status !== data.status && 
+      (data.status === 'delivered' || data.status === 'confirmed');
+    
     await db.collection('orders').doc(id).update({
       ...data,
       updated_at: FieldValue.serverTimestamp(),
     });
+    
+    // Send CAPI event if status changed to delivered or confirmed
+    if (isStatusChangingToDeliveredOrConfirmed && (data.status === 'delivered' || data.status === 'confirmed')) {
+      await sendCAPIEventForOrderStatusChange(id, data.status);
+    }
     
     console.log('✅ Order updated successfully');
     revalidatePath('/');

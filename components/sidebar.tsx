@@ -1,12 +1,12 @@
 'use client';
 
-import { Package, Megaphone, MessageCircle } from 'lucide-react';
+import { Package, Megaphone, MessageCircle, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
-  activePage: 'orders' | 'campaigns' | 'whatsapp';
-  setActivePage: (page: 'orders' | 'campaigns' | 'whatsapp') => void;
+  activePage: 'orders' | 'campaigns' | 'whatsapp' | 'settings';
+  setActivePage: (page: 'orders' | 'campaigns' | 'whatsapp' | 'settings') => void;
 }
 
 export function Sidebar({ activePage, setActivePage }: SidebarProps) {
@@ -60,6 +60,20 @@ export function Sidebar({ activePage, setActivePage }: SidebarProps) {
         >
           <Megaphone size={18} />
           Ad Campaigns
+        </Button>
+
+        <Button
+          variant="ghost"
+          className={cn(
+            'w-full justify-start gap-3 h-11 text-base',
+            activePage === 'settings'
+              ? 'bg-slate-800 text-white hover:bg-slate-700'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
+          )}
+          onClick={() => setActivePage('settings')}
+        >
+          <Settings size={18} />
+          Settings
         </Button>
       </nav>
 

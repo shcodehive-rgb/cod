@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CampaignsTable } from '@/components/campaigns/campaigns-table';
 import { SummaryMetrics } from '@/components/summary-metrics';
 import { createCampaign, updateCampaign, deleteCampaign } from '@/app/actions';
+import { RotateCcw } from 'lucide-react';
 import { Campaign } from '@/types/campaign';
 import { Order } from '@/types/order';
 
@@ -21,6 +22,7 @@ export function CampaignsPage({ initialCampaigns, initialOrders, onCampaignsUpda
   const [pendingUpdate, setPendingUpdate] = useState<Campaign | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [pendingCreate, setPendingCreate] = useState<Campaign | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleAddCampaign = () => {
     const newCampaign: Campaign = {
@@ -30,6 +32,7 @@ export function CampaignsPage({ initialCampaigns, initialOrders, onCampaignsUpda
       plannedBudget: 0,
       actualSpent: 0,
       ordersGenerated: 0,
+      adCopies: [],
     };
     
     setCampaigns(prev => {
@@ -64,6 +67,45 @@ export function CampaignsPage({ initialCampaigns, initialOrders, onCampaignsUpda
     // Set pending operation to be handled by useEffect
     if (!id.startsWith('temp-')) {
       setPendingDelete(id);
+    }
+  };
+
+  const handleResetTestData = async () => {
+    const confirmed = window.confirm(
+      'Êtes-vous sûr de vouloir réinitialiser les données de test ?\n\n' +
+      'Cette action va :\n' +
+      '1. Supprimer toutes les commandes et campagnes de test (avant aujourd\'hui)\n' +
+      '2. Remettre à zéro les données financières des campagnes restantes\n' +
+      '3. Forcer la synchronisation avec l\'API Facebook Insights\n\n' +
+      'Cette action est irréversible !'
+    );
+    
+    if (!confirmed) return;
+    
+    setIsResetting(true);
+    try {
+      const response = await fetch('/api/reset-test-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        alert(`Réinitialisation réussie !\n\n` +
+          `Supprimé : ${data.deletedRecords.orders} commandes, ${data.deletedRecords.campaigns} campagnes\n` +
+          `Réinitialisé : ${data.resetCampaigns} campagnes\n\n` +
+          `Les données réelles sont préservées. Actual Spent sera maintenant alimenté par l'API Facebook.`);
+        
+        // Refresh the page to show updated data
+        window.location.reload();
+      } else {
+        alert('Échec de la réinitialisation : ' + (data.error || 'Erreur inconnue'));
+      }
+    } catch (err) {
+      console.error('Reset error:', err);
+      alert('Échec de la réinitialisation. Veuillez réessayer.');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -115,6 +157,15 @@ export function CampaignsPage({ initialCampaigns, initialOrders, onCampaignsUpda
         >
           <Plus size={18} />
           New Campaign
+        </Button>
+        <Button
+          onClick={handleResetTestData}
+          disabled={isResetting || isPending}
+          variant="outline"
+          className="border-orange-600/50 text-orange-400 hover:bg-orange-950/30 gap-2"
+        >
+          <RotateCcw size={18} />
+          {isResetting ? 'Réinitialisation...' : 'Reset Test Data'}
         </Button>
       </div>
 

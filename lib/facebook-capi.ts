@@ -21,6 +21,7 @@ export interface CAPIOrderData {
   sellingPrice: number;  // Revenue value in DH
   currency?: string;     // Defaults to 'MAD' (Moroccan Dirham)
   campaignId?: string;
+  adId?: string;         // Specific Ad Creative ID from Facebook
   fbp?: string;          // Meta Browser ID (_fbp)
   fbc?: string;          // Meta Click ID (_fbc)
 }
@@ -58,13 +59,17 @@ export async function sendInstantPurchaseEvent(
   accessToken: string,
   clientIp?: string,
   userAgent?: string,
+  serverTimestamp?: Date, // Use actual server timestamp when available
 ): Promise<CAPIResult> {
   const endpoint = `https://graph.facebook.com/v19.0/${pixelId}/events`;
 
   // 1:1 Deduplication: Use the exact Firestore Document ID as the event_id.
   // This allows Meta to perfectly match this server event with the browser pixel event.
   const eventId = orderData.orderId;
-  const eventTime = Math.floor(Date.now() / 1000); 
+  // CRITICAL: Use server timestamp for accurate event_time, fallback to current time
+  const eventTime = serverTimestamp ? 
+    Math.floor(serverTimestamp.getTime() / 1000) : 
+    Math.floor(Date.now() / 1000); 
 
   // Advanced Matching: Split name into First (fn) and Last (ln) components
   const nameParts = (orderData.customerName || 'Unknown').trim().split(/\s+/);
@@ -100,6 +105,8 @@ export async function sendInstantPurchaseEvent(
           currency:     orderData.currency || 'MAD',
           order_id:     orderData.orderId,
           content_type: 'product',
+          // Include specific ad creative ID for better optimization
+          ...(orderData.adId && { ad_id: orderData.adId }),
         },
       },
     ],
@@ -132,6 +139,35 @@ export async function sendInstantPurchaseEvent(
     console.error('❌ [CAPI] Network error:', err.message);
     return { success: false, error: err.message };
   }
+}
+
+// ─── Status Change Purchase Event ─────────────────────────────────────────────
+/**
+ * Sends a Purchase event when order status changes to 'delivered' or 'confirmed'
+ * Includes the specific Ad ID for creative-level optimization
+ *
+ * @param orderData   - Details of the order
+ * @param pixelId     - Meta Pixel ID (from the linked campaign in Firestore)
+ * @param accessToken - CAPI Access Token (from campaign or env)
+ * @param clientIp    - Customer's IP address (optional, improves match quality)
+ * @param userAgent   - Customer's browser User-Agent (optional, improves match quality)
+ */
+export async function sendStatusChangePurchaseEvent(
+  orderData: CAPIOrderData,
+  pixelId: string,
+  accessToken: string,
+  serverTimestamp?: Date, // Pass the actual server timestamp from Firestore
+  clientIp?: string,
+  userAgent?: string,
+): Promise<CAPIResult> {
+  // Use the same function but with status-specific logging
+  console.log(`\n🧠 [CAPI] 🔄 Status Change Purchase event → Pixel ${pixelId}`);
+  console.log(`   Order: ${orderData.orderId} | ${orderData.sellingPrice} MAD | ${orderData.phone}`);
+  if (orderData.adId) {
+    console.log(`   Ad Creative ID: ${orderData.adId} (for optimization)`);
+  }
+
+  return sendInstantPurchaseEvent(orderData, pixelId, accessToken, clientIp, userAgent, serverTimestamp);
 }
 
 // ─── Legacy alias (keep for backwards compatibility) ──────────────────────────

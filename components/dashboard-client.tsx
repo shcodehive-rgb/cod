@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/sidebar';
 import { OrdersPage } from '@/components/pages/orders-page';
 import { CampaignsPage } from '@/components/pages/campaigns-page';
 import WhatsAppPage from '@/components/pages/whatsapp-page';
+import { SettingsPage } from '@/components/pages/settings-page';
 import { Order } from '@/types/order';
 import { Campaign } from '@/types/campaign';
 import { BlacklistEntry } from '@/types/blacklist';
@@ -15,7 +16,7 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ initialOrders, initialCampaigns }: DashboardClientProps) {
-  const [activePage, setActivePage] = useState<'orders' | 'campaigns' | 'whatsapp'>('orders');
+  const [activePage, setActivePage] = useState<'orders' | 'campaigns' | 'whatsapp' | 'settings'>('orders');
   const [orders, setOrders] = useState(initialOrders);
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [blacklist, setBlacklist] = useState<BlacklistEntry[]>([]);
@@ -114,6 +115,9 @@ export function DashboardClient({ initialOrders, initialCampaigns }: DashboardCl
         )}
         {activePage === 'whatsapp' && (
           <WhatsAppPage />
+        )}
+        {activePage === 'settings' && (
+          <SettingsPage />
         )}
       </div>
     </div>

@@ -49,6 +49,7 @@ export function OrdersTable({
           <TableHead className="text-slate-300 font-semibold text-right min-w-[100px]">Shipping Fee (DH)</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right min-w-[100px]">Return Fee (DH)</TableHead>
           <TableHead className="text-slate-300 font-semibold min-w-[150px]">Ad Campaign (Source)</TableHead>
+          <TableHead className="text-slate-300 font-semibold min-w-[150px]">Ad Copie (ID)</TableHead>
           <TableHead className="text-slate-300 font-semibold min-w-[100px]">Status</TableHead>
           <TableHead className="text-slate-300 font-semibold text-right min-w-[120px]">Net Profit (DH)</TableHead>
           <TableHead className="text-slate-300 font-semibold">Actions</TableHead>
@@ -57,7 +58,7 @@ export function OrdersTable({
       <TableBody>
         {orders.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={12} className="text-center py-8 text-slate-400">
+            <TableCell colSpan={13} className="text-center py-8 text-slate-400">
               No orders yet. Add your first order to get started.
             </TableCell>
           </TableRow>

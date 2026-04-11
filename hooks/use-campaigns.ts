@@ -12,6 +12,7 @@ export function useCampaigns() {
       plannedBudget: 0,
       actualSpent: 0,
       ordersGenerated: 0,
+      adCopies: [],
     };
     setCampaigns([...campaigns, newCampaign]);
   };

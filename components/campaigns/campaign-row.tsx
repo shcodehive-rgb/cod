@@ -4,10 +4,11 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
-import { Campaign } from '@/types/campaign';
+import { Trash2, Plus } from 'lucide-react';
+import { Campaign, AdCopy } from '@/types/campaign';
 import { Order } from '@/types/order';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface CampaignRowProps {
   campaign: Campaign;
@@ -17,6 +18,9 @@ interface CampaignRowProps {
 }
 
 export function CampaignRow({ campaign, onUpdate, onDelete, orders = [] }: CampaignRowProps) {
+  const [newAdCopyName, setNewAdCopyName] = useState('');
+  const [newAdCopyId, setNewAdCopyId] = useState('');
+  
   const campaignOrders = orders.filter(
     o => o.status === 'delivered' && o.campaignSource === campaign.id
   );
@@ -34,6 +38,28 @@ export function CampaignRow({ campaign, onUpdate, onDelete, orders = [] }: Campa
 
   const handleFieldChange = (field: keyof Campaign, value: any) => {
     onUpdate({ ...campaign, [field]: value });
+  };
+
+  const handleAddAdCopy = () => {
+    if (newAdCopyName.trim() && newAdCopyId.trim()) {
+      const newAdCopy: AdCopy = {
+        id: `adcopy-${Date.now()}`,
+        name: newAdCopyName.trim(),
+        adId: newAdCopyId.trim(),
+        created_at: new Date().toISOString(),
+      };
+      
+      const updatedAdCopies = [...(campaign.adCopies || []), newAdCopy];
+      onUpdate({ ...campaign, adCopies: updatedAdCopies });
+      
+      setNewAdCopyName('');
+      setNewAdCopyId('');
+    }
+  };
+
+  const handleRemoveAdCopy = (adCopyId: string) => {
+    const updatedAdCopies = (campaign.adCopies || []).filter(ac => ac.id !== adCopyId);
+    onUpdate({ ...campaign, adCopies: updatedAdCopies });
   };
 
   const handleToggle = async (checked: boolean) => {
@@ -128,49 +154,58 @@ export function CampaignRow({ campaign, onUpdate, onDelete, orders = [] }: Campa
         {netROI >= 0 ? '+' : ''}{netROI.toFixed(2)} DH
       </TableCell>
 
-      {/* ── META INTEGRATION COLUMN ── */}
+      {/* ── AD COPIES COLUMN ── */}
       <TableCell>
-        <div className="flex flex-col gap-1 min-w-[310px]">
+        <div className="flex flex-col gap-2 min-w-[280px]">
           <div className="flex items-center justify-between px-1">
-            <span className="text-[9px] font-bold text-slate-500 uppercase">Pixel & CAPI Token</span>
+            <span className="text-[9px] font-bold text-slate-500 uppercase">Ad Copies (Creatives)</span>
+            <span className="text-[9px] text-slate-400">{campaign.adCopies?.length || 0}</span>
           </div>
-          <Input
-            value={campaign.pixelId || ''}
-            onChange={(e) => handleFieldChange('pixelId', e.target.value)}
-            className="bg-slate-900 border-slate-700 text-white text-xs h-7"
-            placeholder="Pixel ID"
-          />
-          <Input
-            type="password"
-            value={campaign.capiAccessToken || ''}
-            onChange={(e) => handleFieldChange('capiAccessToken', e.target.value)}
-            className="bg-slate-900 border-slate-700 text-white text-xs h-7"
-            placeholder="CAPI Access Token"
-          />
           
-          <div className="flex items-center justify-between px-1 mt-1">
-            <span className="text-[9px] font-bold text-slate-500 uppercase">Ad Attribution (ID)</span>
+          {/* Existing Ad Copies */}
+          <div className="max-h-32 overflow-y-auto space-y-1">
+            {(campaign.adCopies || []).map((adCopy) => (
+              <div key={adCopy.id} className="flex items-center gap-1 bg-slate-900 rounded p-1">
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs text-slate-200 truncate">{adCopy.name}</div>
+                  <div className="text-[10px] text-slate-500 truncate">ID: {adCopy.adId}</div>
+                </div>
+                <Button
+                  onClick={() => handleRemoveAdCopy(adCopy.id)}
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-950/20"
+                >
+                  <Trash2 size={10} />
+                </Button>
+              </div>
+            ))}
           </div>
-          <Input
-            value={campaign.metaCampaignId || ''}
-            onChange={(e) => handleFieldChange('metaCampaignId', e.target.value)}
-            className="bg-slate-900 border-slate-700 text-white text-xs h-7"
-            placeholder="Meta Campaign ID"
-          />
-          <Input
-            value={campaign.adCode || ''}
-            onChange={(e) => handleFieldChange('adCode', e.target.value)}
-            className="bg-slate-900 border-slate-700 text-white text-xs h-7 border-blue-900/40"
-            placeholder="Meta Ad ID (e.g. ad_123)"
-          />
           
-          <Button
-            onClick={handleSync}
-            size="sm"
-            className="h-7 text-xs bg-blue-700 hover:bg-blue-600 text-white mt-0.5 gap-1 shadow-lg"
-          >
-            🔄 Sync Meta Data
-          </Button>
+          {/* Add New Ad Copy */}
+          <div className="space-y-1 pt-1 border-t border-slate-800">
+            <Input
+              value={newAdCopyName}
+              onChange={(e) => setNewAdCopyName(e.target.value)}
+              className="bg-slate-900 border-slate-700 text-white text-xs h-6"
+              placeholder="Ad Copy Name"
+            />
+            <Input
+              value={newAdCopyId}
+              onChange={(e) => setNewAdCopyId(e.target.value)}
+              className="bg-slate-900 border-slate-700 text-white text-xs h-6"
+              placeholder="Facebook Ad ID"
+            />
+            <Button
+              onClick={handleAddAdCopy}
+              disabled={!newAdCopyName.trim() || !newAdCopyId.trim()}
+              size="sm"
+              className="h-6 text-xs bg-green-700 hover:bg-green-600 text-white w-full gap-1"
+            >
+              <Plus size={10} />
+              Add Ad Copy
+            </Button>
+          </div>
         </div>
       </TableCell>
 

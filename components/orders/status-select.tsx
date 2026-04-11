@@ -28,6 +28,10 @@ const statusConfig: Record<OrderStatus, { label: string; className: string }> = 
     label: 'Delivered',
     className: 'bg-green-900 text-green-200 hover:bg-green-800',
   },
+  confirmed: {
+    label: 'Confirmed',
+    className: 'bg-purple-900 text-purple-200 hover:bg-purple-800',
+  },
   returned: {
     label: 'Returned',
     className: 'bg-red-900 text-red-200 hover:bg-red-800',
@@ -54,6 +58,11 @@ export function StatusSelect({ value, onSelect }: StatusSelectProps) {
         <SelectItem value="delivered" className="text-slate-200 focus:bg-slate-800">
           <Badge variant="outline" className={statusConfig.delivered.className}>
             {statusConfig.delivered.label}
+          </Badge>
+        </SelectItem>
+        <SelectItem value="confirmed" className="text-slate-200 focus:bg-slate-800">
+          <Badge variant="outline" className={statusConfig.confirmed.className}>
+            {statusConfig.confirmed.label}
           </Badge>
         </SelectItem>
         <SelectItem value="returned" className="text-slate-200 focus:bg-slate-800">
